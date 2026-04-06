@@ -11,11 +11,7 @@
 - Навигация по директориям (вверх/вниз).
 - CRUD: создание, чтение, обновление, удаление.
 
-## Сборка
+## Запуск
 
-С использованием CMake:
-
-```bash
-mkdir build && cd build
-cmake ..
-make
+g++ -std=c++17 -Iinclude main.cpp src/*.cpp -o terminal
+./terminal
