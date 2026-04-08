@@ -1,6 +1,7 @@
 #include "StringTable.h"
 #include <cassert>
 #include <iostream>
+#include <sstream>   // ← вот это было пропущено
 
 void testAddAndAccess() {
     StringTable st;
