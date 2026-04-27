@@ -4,33 +4,30 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <memory>          // для std::shared_ptr
+
+// Forward declaration (чтобы не включать Atoms.h пока в заголовке)
+class MemoryOperand;
 
 class SymbolTable {
 public:
-    // Структура записи таблицы символов (пока только имя)
     struct TableRecord {
         std::string _name;
-
-        // Конструктор для удобства
         TableRecord(const std::string& name = "") : _name(name) {}
-
-        // Оператор сравнения для тестов
         bool operator==(const TableRecord& other) const {
             return _name == other._name;
         }
     };
 
 protected:
-    std::vector<TableRecord> _records;   // хранилище записей
+    std::vector<TableRecord> _records;
+    // Для кэширования созданных операндов (чтобы для одной записи не создавать много shared_ptr)
+    std::vector<std::shared_ptr<MemoryOperand>> _operands;
 
 public:
-    // Доступ по индексу (только чтение)
     const TableRecord& operator[](int index) const;
-
-    // Добавить новую запись с именем, если её ещё нет; вернуть индекс
-    int add(const std::string& name);
-
-    // Вывод всей таблицы в поток (формат: "индекс имя")
+    // Новый метод add, возвращающий shared_ptr<MemoryOperand>
+    std::shared_ptr<MemoryOperand> add(const std::string& name);
     friend std::ostream& operator<<(std::ostream& os, const SymbolTable& st);
 };
 
