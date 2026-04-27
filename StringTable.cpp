@@ -1,21 +1,29 @@
 #include "StringTable.h"
+#include "Atoms.h"
 #include <algorithm>
 
 const std::string& StringTable::operator[](int index) const {
-    // Предполагаем, что индекс всегда корректен
     return _strings[index];
 }
 
-int StringTable::add(const std::string& name) {
-    // Ищем, есть ли уже такое имя
+std::shared_ptr<StringOperand> StringTable::add(const std::string& name) {
     auto it = std::find(_strings.begin(), _strings.end(), name);
     if (it != _strings.end()) {
-        // Нашли — возвращаем индекс
-        return static_cast<int>(it - _strings.begin());
+        int index = static_cast<int>(it - _strings.begin());
+        if (index < static_cast<int>(_operands.size()) && _operands[index]) {
+            return _operands[index];
+        }
+        auto operand = std::make_shared<StringOperand>(index, this);
+        if (index >= static_cast<int>(_operands.size()))
+            _operands.resize(index + 1);
+        _operands[index] = operand;
+        return operand;
     }
-    // Не нашли — добавляем в конец
+    int newIndex = static_cast<int>(_strings.size());
     _strings.push_back(name);
-    return static_cast<int>(_strings.size()) - 1;
+    auto operand = std::make_shared<StringOperand>(newIndex, this);
+    _operands.push_back(operand);
+    return operand;
 }
 
 std::ostream& operator<<(std::ostream& os, const StringTable& st) {
