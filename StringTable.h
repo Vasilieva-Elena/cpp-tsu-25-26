@@ -4,19 +4,17 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <memory>
+
+class StringOperand;  // forward declaration
 
 class StringTable {
 protected:
-    std::vector<std::string> _strings;   // хранит все строки (имена)
-
+    std::vector<std::string> _strings;
+    std::vector<std::shared_ptr<StringOperand>> _operands;
 public:
-    // Доступ по индексу (только чтение)
     const std::string& operator[](int index) const;
-
-    // Добавить строку, если её ещё нет; вернуть её индекс
-    int add(const std::string& name);
-
-    // Вывод всей таблицы в поток (формат: "индекс имя")
+    std::shared_ptr<StringOperand> add(const std::string& name);
     friend std::ostream& operator<<(std::ostream& os, const StringTable& st);
 };
 
