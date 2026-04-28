@@ -1,6 +1,6 @@
 #include "Translator.h"
 #include <sstream>
-#include <iostream>   // для std::cerr
+#include <iostream>
 
 Translator::Translator(std::istream& input)
     : _scanner(input), _currentLexem(LexemType::eof), _nextLabel(0) {
@@ -51,7 +51,6 @@ void Translator::lexicalError(const std::string& message) {
     throw TranslationException("Lexical error: " + message);
 }
 
-// ========== Новый метод translate() ==========
 void Translator::translate() {
     try {
         auto result = E();
@@ -65,10 +64,10 @@ void Translator::translate() {
     }
 }
 
-// ========== Рекурсивный спуск для выражений ==========
+// ========== Рекурсивный спуск ==========
 
 std::shared_ptr<RValue> Translator::E() {
-    return E7();   // правило 1
+    return E7();
 }
 
 std::shared_ptr<RValue> Translator::E7() {
@@ -125,15 +124,17 @@ std::shared_ptr<RValue> Translator::E5() {
 
 std::shared_ptr<RValue> Translator::E5_(std::shared_ptr<RValue> p) {
     LexemType op = _currentLexem.type();
+    // Поддерживаются ==, !=, >, <, <=  (>= пока нет в лексере)
     if (op == LexemType::opeq || op == LexemType::opne ||
         op == LexemType::opgt || op == LexemType::oplt ||
-        op == LexemType::ople || op == LexemType::opge) {
+        op == LexemType::ople) {
         nextToken();
         auto r = E4();
         if (!r) syntaxError("Expected E4 after relational operator");
         auto s = allocTemp();
         auto l = newLabel();
-        generateAtom(std::make_unique<BinaryOpAtom>("MOV", std::make_shared<NumberOperand>(1), nullptr, s));
+        // MOV 1, s
+        generateAtom(std::make_unique<UnaryOpAtom>("MOV", std::make_shared<NumberOperand>(1), s));
         std::string cond;
         switch (op) {
             case LexemType::opeq: cond = "EQ"; break;
@@ -141,13 +142,12 @@ std::shared_ptr<RValue> Translator::E5_(std::shared_ptr<RValue> p) {
             case LexemType::opgt: cond = "GT"; break;
             case LexemType::oplt: cond = "LT"; break;
             case LexemType::ople: cond = "LE"; break;
-            case LexemType::opge: cond = "GE"; break;
             default: break;
         }
         generateAtom(std::make_unique<ConditionalJumpAtom>(cond, p, r, l));
-        generateAtom(std::make_unique<BinaryOpAtom>("MOV", std::make_shared<NumberOperand>(0), nullptr, s));
-        // Временно: просто выводим метку как строку (для упрощения)
-        // В идеале нужен отдельный атом LabelAtom, но для тестов сойдёт
+        // MOV 0, s
+        generateAtom(std::make_unique<UnaryOpAtom>("MOV", std::make_shared<NumberOperand>(0), s));
+        // Метка l – будет использована в ConditionalJumpAtom, отдельный атом LBL не обязателен
         auto q = E5_(s);
         if (!q) syntaxError("E5_ after comparison failed");
         return q;
