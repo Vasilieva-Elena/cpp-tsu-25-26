@@ -124,7 +124,6 @@ std::shared_ptr<RValue> Translator::E5() {
 
 std::shared_ptr<RValue> Translator::E5_(std::shared_ptr<RValue> p) {
     LexemType op = _currentLexem.type();
-    // Поддерживаются ==, !=, >, <, <=  (>= пока нет в лексере)
     if (op == LexemType::opeq || op == LexemType::opne ||
         op == LexemType::opgt || op == LexemType::oplt ||
         op == LexemType::ople) {
@@ -133,7 +132,7 @@ std::shared_ptr<RValue> Translator::E5_(std::shared_ptr<RValue> p) {
         if (!r) syntaxError("Expected E4 after relational operator");
         auto s = allocTemp();
         auto l = newLabel();
-        // MOV 1, s
+        // MOV 1, s   (используем UnaryOpAtom)
         generateAtom(std::make_unique<UnaryOpAtom>("MOV", std::make_shared<NumberOperand>(1), s));
         std::string cond;
         switch (op) {
@@ -147,7 +146,7 @@ std::shared_ptr<RValue> Translator::E5_(std::shared_ptr<RValue> p) {
         generateAtom(std::make_unique<ConditionalJumpAtom>(cond, p, r, l));
         // MOV 0, s
         generateAtom(std::make_unique<UnaryOpAtom>("MOV", std::make_shared<NumberOperand>(0), s));
-        // Метка l – будет использована в ConditionalJumpAtom, отдельный атом LBL не обязателен
+        // Метка l – будет использована в ConditionalJumpAtom, отдельный LBL не обязателен
         auto q = E5_(s);
         if (!q) syntaxError("E5_ after comparison failed");
         return q;
