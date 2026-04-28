@@ -11,6 +11,7 @@ class MemoryOperand;
 
 class SymbolTable {
 public:
+    std::shared_ptr<MemoryOperand> alloc();
     struct TableRecord {
         std::string _name;
         TableRecord(const std::string& name = "") : _name(name) {}
