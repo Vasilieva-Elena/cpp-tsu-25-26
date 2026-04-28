@@ -1,6 +1,7 @@
 #include "Translator.h"
 #include <sstream>
 #include <iostream>
+#include <memory>
 
 Translator::Translator(std::istream& input)
     : _scanner(input), _currentLexem(LexemType::eof), _nextLabel(0) {
@@ -132,7 +133,6 @@ std::shared_ptr<RValue> Translator::E5_(std::shared_ptr<RValue> p) {
         if (!r) syntaxError("Expected E4 after relational operator");
         auto s = allocTemp();
         auto l = newLabel();
-        // MOV 1, s   (используем UnaryOpAtom)
         generateAtom(std::make_unique<UnaryOpAtom>("MOV", std::make_shared<NumberOperand>(1), s));
         std::string cond;
         switch (op) {
@@ -144,9 +144,7 @@ std::shared_ptr<RValue> Translator::E5_(std::shared_ptr<RValue> p) {
             default: break;
         }
         generateAtom(std::make_unique<ConditionalJumpAtom>(cond, p, r, l));
-        // MOV 0, s
         generateAtom(std::make_unique<UnaryOpAtom>("MOV", std::make_shared<NumberOperand>(0), s));
-        // Метка l – будет использована в ConditionalJumpAtom, отдельный LBL не обязателен
         auto q = E5_(s);
         if (!q) syntaxError("E5_ after comparison failed");
         return q;
@@ -212,6 +210,51 @@ std::shared_ptr<RValue> Translator::E2() {
     return E1();
 }
 
+// Реализация E1()
+std::shared_ptr<RValue> Translator::E1() {
+    if (_currentLexem.type() == LexemType::num) {
+        int val = _currentLexem.value();
+        nextToken();
+        return std::make_shared<NumberOperand>(val);
+    }
+    if (_currentLexem.type() == LexemType::chr) {
+        char ch = static_cast<char>(_currentLexem.value());
+        nextToken();
+        return std::make_shared<NumberOperand>(ch);
+    }
+    if (_currentLexem.type() == LexemType::opinc) {
+        nextToken();
+        if (_currentLexem.type() != LexemType::id)
+            syntaxError("Expected id after ++");
+        std::string name = _currentLexem.str();
+        nextToken();
+        auto q = _symTable.add(name);
+        auto r = allocTemp();
+        generateAtom(std::make_unique<BinaryOpAtom>("ADD", q, std::make_shared<NumberOperand>(1), r));
+        return r;
+    }
+    if (_currentLexem.type() == LexemType::id) {
+        std::string name = _currentLexem.str();
+        nextToken();
+        auto p = _symTable.add(name);
+        auto q = E1_(p);
+        if (!q) syntaxError("E1_ failed");
+        return q;
+    }
+    if (_currentLexem.type() == LexemType::lpar) {
+        nextToken();
+        auto q = E();
+        if (!q) syntaxError("Expression expected after '('");
+        if (_currentLexem.type() != LexemType::rpar)
+            syntaxError("Missing ')'");
+        nextToken();
+        return q;
+    }
+    syntaxError("Unexpected token in E1");
+    return nullptr;
+}
+
+// Реализация E1_
 std::shared_ptr<RValue> Translator::E1_(std::shared_ptr<RValue> p) {
     if (_currentLexem.type() == LexemType::opinc) {
         nextToken();
@@ -219,18 +262,6 @@ std::shared_ptr<RValue> Translator::E1_(std::shared_ptr<RValue> p) {
         auto r = allocTemp();
         generateAtom(std::make_unique<UnaryOpAtom>("MOV", s, r));
         generateAtom(std::make_unique<BinaryOpAtom>("ADD", s, std::make_shared<NumberOperand>(1), std::static_pointer_cast<MemoryOperand>(s)));
-        return r;
-    }
-    return p;
-}
-
-std::shared_ptr<RValue> Translator::E1_(std::shared_ptr<RValue> p) {
-    if (_currentLexem.type() == LexemType::opinc) {
-        nextToken();
-        auto s = p;
-        auto r = allocTemp();
-        generateAtom(std::make_unique<UnaryOpAtom>("MOV", s, r));
-        generateAtom(std::make_unique<BinaryOpAtom>("ADD", s, std::make_shared<NumberOperand>(1), s));
         return r;
     }
     return p;
