@@ -212,47 +212,16 @@ std::shared_ptr<RValue> Translator::E2() {
     return E1();
 }
 
-std::shared_ptr<RValue> Translator::E1() {
-    if (_currentLexem.type() == LexemType::num) {
-        int val = _currentLexem.value();
-        nextToken();
-        return std::make_shared<NumberOperand>(val);
-    }
-    if (_currentLexem.type() == LexemType::chr) {
-        char ch = static_cast<char>(_currentLexem.value());
-        nextToken();
-        return std::make_shared<NumberOperand>(ch);
-    }
+std::shared_ptr<RValue> Translator::E1_(std::shared_ptr<RValue> p) {
     if (_currentLexem.type() == LexemType::opinc) {
         nextToken();
-        if (_currentLexem.type() != LexemType::id)
-            syntaxError("Expected id after ++");
-        std::string name = _currentLexem.str();
-        nextToken();
-        auto q = _symTable.add(name);
+        auto s = p;
         auto r = allocTemp();
-        generateAtom(std::make_unique<BinaryOpAtom>("ADD", q, std::make_shared<NumberOperand>(1), r));
+        generateAtom(std::make_unique<UnaryOpAtom>("MOV", s, r));
+        generateAtom(std::make_unique<BinaryOpAtom>("ADD", s, std::make_shared<NumberOperand>(1), std::static_pointer_cast<MemoryOperand>(s)));
         return r;
     }
-    if (_currentLexem.type() == LexemType::id) {
-        std::string name = _currentLexem.str();
-        nextToken();
-        auto p = _symTable.add(name);
-        auto q = E1_(p);
-        if (!q) syntaxError("E1_ failed");
-        return q;
-    }
-    if (_currentLexem.type() == LexemType::lpar) {
-        nextToken();
-        auto q = E();
-        if (!q) syntaxError("Expression expected after '('");
-        if (_currentLexem.type() != LexemType::rpar)
-            syntaxError("Missing ')'");
-        nextToken();
-        return q;
-    }
-    syntaxError("Unexpected token in E1");
-    return nullptr;
+    return p;
 }
 
 std::shared_ptr<RValue> Translator::E1_(std::shared_ptr<RValue> p) {
