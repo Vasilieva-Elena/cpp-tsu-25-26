@@ -9,7 +9,6 @@
 #include <vector>
 #include <iostream>
 
-// Исключение для ошибок трансляции
 class TranslationException : public std::exception {
     std::string _message;
 public:
@@ -19,39 +18,41 @@ public:
 
 class Translator {
 protected:
-    std::vector<std::unique_ptr<Atom>> _atoms;   // хранилище атомов
-    SymbolTable _symTable;                       // таблица символов
-    StringTable _strTable;                       // таблица строк
-    Scanner _scanner;                            // лексический анализатор
-    Token _currentLexem;                         // текущий токен
+    std::vector<std::unique_ptr<Atom>> _atoms;
+    SymbolTable _symTable;
+    StringTable _strTable;
+    Scanner _scanner;
+    Token _currentLexem;
+    int _nextLabel;
 
-    int _nextLabel;                              // счётчик для новых меток
-
-    // Вспомогательные методы для работы с токенами
-    void nextToken();                            // прочитать следующий токен
-    void match(LexemType expected);              // проверить и пропустить токен
+    void nextToken();
+    void match(LexemType expected);
 
 public:
     Translator(std::istream& input);
-
-    // Добавление атома в список
     void generateAtom(std::unique_ptr<Atom> atom);
-    
-    // Вывод всех атомов в поток
     void printAtoms(std::ostream& stream) const;
-
-    // Создание новой временной переменной (через SymbolTable::alloc)
     std::shared_ptr<MemoryOperand> allocTemp();
-
-    // Создание новой метки
     std::shared_ptr<LabelOperand> newLabel();
-
-    // Методы обработки ошибок (кидают исключения)
     void syntaxError(const std::string& message);
     void lexicalError(const std::string& message);
-
-    // Основной метод для запуска трансляции (пока пустой заглушка)
     void translate();
+
+    // Методы рекурсивного спуска (грамматика выражений)
+    std::shared_ptr<RValue> E();
+    std::shared_ptr<RValue> E7();
+    std::shared_ptr<RValue> E7_(std::shared_ptr<RValue> p);
+    std::shared_ptr<RValue> E6();
+    std::shared_ptr<RValue> E6_(std::shared_ptr<RValue> p);
+    std::shared_ptr<RValue> E5();
+    std::shared_ptr<RValue> E5_(std::shared_ptr<RValue> p);
+    std::shared_ptr<RValue> E4();
+    std::shared_ptr<RValue> E4_(std::shared_ptr<RValue> p);
+    std::shared_ptr<RValue> E3();
+    std::shared_ptr<RValue> E3_(std::shared_ptr<RValue> p);
+    std::shared_ptr<RValue> E2();
+    std::shared_ptr<RValue> E1();
+    std::shared_ptr<RValue> E1_(std::shared_ptr<RValue> p);
 };
 
 #endif
