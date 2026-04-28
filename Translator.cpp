@@ -2,8 +2,8 @@
 #include <sstream>
 
 Translator::Translator(std::istream& input)
-    : _scanner(input), _nextLabel(0) {
-    nextToken();  // загружаем первый токен
+    : _scanner(input), _currentLexem(LexemType::eof), _nextLabel(0) {
+    nextToken();
 }
 
 void Translator::nextToken() {
@@ -18,8 +18,8 @@ void Translator::match(LexemType expected) {
         nextToken();
     } else {
         std::ostringstream oss;
-        oss << "Ожидался токен типа " << static_cast<int>(expected)
-            << ", получен " << static_cast<int>(_currentLexem.type());
+        oss << "Expected token type " << static_cast<int>(expected)
+            << ", got " << static_cast<int>(_currentLexem.type());
         syntaxError(oss.str());
     }
 }
@@ -35,9 +35,7 @@ void Translator::printAtoms(std::ostream& stream) const {
 }
 
 std::shared_ptr<MemoryOperand> Translator::allocTemp() {
-    static int tempCounter = 0;
-    std::string tempName = "temp" + std::to_string(++tempCounter);
-    return _symTable.add(tempName);
+    return _symTable.alloc();
 }
 
 std::shared_ptr<LabelOperand> Translator::newLabel() {
@@ -45,16 +43,15 @@ std::shared_ptr<LabelOperand> Translator::newLabel() {
 }
 
 void Translator::syntaxError(const std::string& message) {
-    throw TranslationException("Синтаксическая ошибка: " + message);
+    throw TranslationException("Syntax error: " + message);
 }
 
 void Translator::lexicalError(const std::string& message) {
-    throw TranslationException("Лексическая ошибка: " + message);
+    throw TranslationException("Lexical error: " + message);
 }
 
 void Translator::translate() {
-    // Пока ничего не делаем — заглушка. В следующем этапе добавим разбор выражений.
-    // Например, просто считываем все токены до конца файла.
+    // Заглушка – пока просто читаем все токены до конца файла
     while (_currentLexem.type() != LexemType::eof) {
         nextToken();
     }
