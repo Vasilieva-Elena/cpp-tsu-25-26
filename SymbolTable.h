@@ -15,7 +15,7 @@ public:
     struct TableRecord {
         std::string _name;
         TableRecord(const std::string& name = "") : _name(name) {}
-        bool operator==(const TableRecord& other) const {
+        bool operator==(const TableRecord& other) const {  // Перегрузка
             return _name == other._name;
         }
     };
