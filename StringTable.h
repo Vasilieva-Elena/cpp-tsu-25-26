@@ -6,7 +6,7 @@
 #include <iostream>
 #include <memory> // для std::shared_ptr
 
-class StringOperand;  // forward declaration - предварительное объявление
+class StringOperand;  // предварительное объявление
 
 class StringTable {
 protected:
