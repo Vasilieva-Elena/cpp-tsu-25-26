@@ -4,9 +4,9 @@
 #include <string>
 #include <vector>
 #include <iostream>
-#include <memory>
+#include <memory> // умный указатель с подсчетом ссылок
 
-class StringOperand;  // forward declaration
+class StringOperand;  // forward declaration - предварительное объявление
 
 class StringTable {
 protected:
