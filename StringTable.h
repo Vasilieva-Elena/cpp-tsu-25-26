@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
-#include <memory> // умный указатель с подсчетом ссылок
+#include <memory> // для std::shared_ptr
 
 class StringOperand;  // forward declaration - предварительное объявление
 
