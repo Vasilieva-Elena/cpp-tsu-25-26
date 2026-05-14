@@ -2,11 +2,11 @@
 #include "Atoms.h"
 #include <algorithm>
 
-const SymbolTable::TableRecord& SymbolTable::operator[](int index) const {
+const SymbolTable::TableRecord& SymbolTable::operator[](int index) const {  //	Доступ к записи по индексу (только чтение)
     return _records[index];
 }
 
-std::shared_ptr<MemoryOperand> SymbolTable::add(const std::string& name) {
+std::shared_ptr<MemoryOperand> SymbolTable::add(const std::string& name) {   // Добавляет переменную или возвращает существующую + кэширует MemoryOperand
     auto it = std::find_if(_records.begin(), _records.end(),
         [&name](const TableRecord& rec) { return rec._name == name; });
     if (it != _records.end()) {
@@ -27,14 +27,14 @@ std::shared_ptr<MemoryOperand> SymbolTable::add(const std::string& name) {
     return operand;
 }
 
-std::ostream& operator<<(std::ostream& os, const SymbolTable& st) {
+std::ostream& operator<<(std::ostream& os, const SymbolTable& st) {    Вывод таблицы для отладки
     for (size_t i = 0; i < st._records.size(); ++i) {
         os << i << " " << st._records[i]._name << std::endl;
     }
     return os;
 }
 
-std::shared_ptr<MemoryOperand> SymbolTable::alloc() {
+std::shared_ptr<MemoryOperand> SymbolTable::alloc() {  Генерирует уникальное временное имя __tmpX и добавляет его в таблицу
     static int counter = 0;
     std::string tempName = "__tmp" + std::to_string(++counter);
     return add(tempName);
