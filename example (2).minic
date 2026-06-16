@@ -1,0 +1,4 @@
+int calculate() {
+    int first = 100;
+    int second = 200;
+    int total;
